@@ -338,19 +338,19 @@ gun.position.set(.22, -.2, -.5); cam.add(gun);
 /* ---------- sectors / world ---------- */
 const SEC = [
   { n: 'ARRIVAL', c: 0x22d3ee, bg: 0x050a14, fog: .026, o: ['RESTORE POWER', 'DISABLE SECURITY', 'REACH THE EXIT'], d: 4, h: 0, s: 0, L: 2, mv: 0, k: 5 },
-  { n: 'REACTOR', c: 0xff9a3c, bg: 0x120804, fog: .03, o: ['REACH THE REACTOR', 'DISABLE SECURITY', 'REACH THE EXIT'], d: 5, h: 1, s: 0, L: 2, mv: 1, k: 3, pad: 1, core: 1 },
+  { n: 'REACTOR', c: 0xff9a3c, bg: 0x120804, fog: .03, o: ['REACH THE REACTOR', 'DISABLE SECURITY', 'REACH THE EXIT'], d: 5, h: 1, s: 0, L: 2, mv: 1, k: 3, core: 1 },
   { n: 'CHRONO LAB', c: 0xb06cff, bg: 0x0a0614, fog: .03, o: ['COLLECT TEMPORAL DATA', 'DISABLE SECURITY', 'REACH THE EXIT'], d: 3, h: 3, s: 0, L: 3, mv: 2, k: 4, an: 1 },
   { n: 'BLACKOUT', c: 0x3a9bff, bg: 0x010204, fog: .07, o: ['RESTORE POWER', 'SURVIVE THE ALARM', 'REACH THE EXIT'], d: 3, h: 3, s: 1, L: 2, mv: 1, k: 12, dark: 1 },
   { n: 'THE CORE', c: 0xff3b4e, bg: 0x0a0408, fog: .022, o: ['OPEN THE CORE GATE', 'DISABLE SENTINELS', 'DEFEAT THE CHRONO WARDEN'], d: 2, h: 2, s: 2, L: 2, mv: 2, k: 6, boss: 1, ring: 1 }
 ];
 const TP = [[[-17, 8], [17, -8]], [[-18, -8], [18, 4]], [[-20, 10], [20, -4], [0, -16]], [[-18, 4], [18, -12], [-6, -18]], [[-18, -8], [18, -8]]];
 let world = new T.Group(); scene.add(world);
-const colls = [], lasers = [], pads = [], terms = [], anoms = [], frags = [], flick = [], spin = [];
+const colls = [], lasers = [], terms = [], anoms = [], frags = [], flick = [], spin = [];
 let door = null, dust = null, floorM = null;
 function clearWorld() {
   world.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
   scene.remove(world); world = new T.Group(); scene.add(world);
-  colls.length = lasers.length = pads.length = terms.length = anoms.length = frags.length = flick.length = spin.length = 0; door = null; dust = null;
+  colls.length = lasers.length = terms.length = anoms.length = frags.length = flick.length = spin.length = 0; door = null; dust = null;
 }
 function gridTex(col) {
   const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
@@ -409,7 +409,6 @@ function buildWorld(n) {
     g.add(bm); [-w / 2, w / 2].forEach(x => { const e = new T.Mesh(new T.BoxGeometry(.4, .8, .4), mat(0x222a35, 0x330008)); e.position.set(x, 0, 0); g.add(e); });
     g.position.set(0, .9, Z[i]); world.add(g); lasers.push({ g, bm, w, mv, z0: Z[i], o: i * 1.3, x: 0, z: Z[i] });
   }
-  if (C.pad || n === 5) [[-12, 8], [12, 2], [0, -14]].forEach(p => { const m = new T.Mesh(new T.CylinderGeometry(3, 3, .06, 24), bas(0xff5522, .55)); m.position.set(p[0], .05, p[1]); m.visible = !!C.pad; world.add(m); pads.push({ x: p[0], z: p[1], r: 3, on: !!C.pad, m }); });
   if (C.an) {
     [[-8, 4], [10, -8], [0, -19]].forEach(p => { const m = new T.Mesh(new T.CylinderGeometry(4, 4, .08, 24), bas(0xb06cff, .35)); m.position.set(p[0], .06, p[1]); world.add(m); anoms.push({ x: p[0], z: p[1], r: 4, m }); });
     [[-22, 14], [22, 10], [-12, -10], [14, -18], [4, 12]].forEach(p => { const m = new T.Mesh(new T.OctahedronGeometry(.4), bas(0xdd99ff)); m.position.set(p[0], 1.3, p[1]); world.add(m); frags.push(m); });
@@ -575,7 +574,7 @@ function bossHit(d, crit) {
   if (B.hp <= 0) { B.dead = true; B.dyT = 4; B.ex = 0; S.score += 5000; S.inv = 99; PR.forEach(p => { p.on = false; p.m.visible = false; }); E.forEach(e => { if (e.on && !e.dead) { e.dead = true; e.dyT = .35; burst(e.x, e.y, e.z, 0x33eeff, 12, 7); } }); B.sh.on = false; B.sh.m.visible = false; sfx('boom'); music(null); }
   else if (ph > B.ph) {
     B.ph = ph; B.inv = 2.2; PR.forEach(p => { p.on = false; p.m.visible = false; }); S.shk = .8; sfx('boss'); burst(B.x, B.y, B.z, 0xff3b4e, 40, 12); banner('PHASE ' + ph, 2.2, 1);
-    if (ph === 3) { S.p3 = true; pads.forEach(p => { p.on = true; p.m.visible = true; }); floorM.emissive.setHex(0x2a0614); $('dist').style.opacity = '1'; }
+    if (ph === 3) { S.p3 = true; floorM.emissive.setHex(0x2a0614); $('dist').style.opacity = '1'; }
   }
 }
 
@@ -705,7 +704,6 @@ function update(dt) {
     if (st === 1 && M.abs(P.z - l.z) < 20) sfx('lwarn');
     if (st === 2 && !S.rw && M.abs(P.z - l.z) < .45 && M.abs(P.x - l.x) < l.w / 2 && P.y < 1.15 && S.lh <= 0) { S.lh = .45; hurt(12); sfx('ldmg'); burst(P.x, 1, P.z, 0xff2233, 8, 4); }
   }
-  for (const p of pads) if (p.on) { p.m.material.opacity = .4 + .2 * M.sin(S.t * 6); if (!S.rw && P.y < .6 && M.hypot(P.x - p.x, P.z - p.z) < p.r) { S.padT = (S.padT || 0) - dt; if (S.padT <= 0) { S.padT = .5; hurt(4); } } }
   for (const a of anoms) a.m.visible = M.random() > .04;
   for (let i = frags.length - 1; i >= 0; i--) { const f = frags[i]; f.rotation.y += dt * 2; f.position.y = 1.3 + M.sin(S.t * 2 + i) * .2; if (M.hypot(P.x - f.position.x, P.z - f.position.z) < 1.5) { world.remove(f); f.geometry.dispose(); frags.splice(i, 1); S.score += 25; S.te = M.min(100, S.te + 15); sfx('pick'); } }
   spin.forEach(m => m.rotation.y += dt * .8); if (dust) dust.rotation.y += dt * .01;
