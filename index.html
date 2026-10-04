@@ -32,6 +32,7 @@ h2{font-size:clamp(22px,5vw,44px);color:#dff}
 .sub{letter-spacing:.35em;color:var(--c);margin:0 0 14px;font-size:clamp(12px,2.4vw,18px)}
 .small,.txt{max-width:560px;font-size:13px;opacity:.75;line-height:1.5;margin:4px}
 .big{font-size:clamp(20px,4vw,34px);letter-spacing:.2em;margin:0}
+.dev{margin:0 0 10px;max-width:100%;text-align:center;font-size:clamp(11px,1.6vw,12px);font-weight:600;letter-spacing:.24em;color:#bfeaf5;opacity:.9;text-shadow:0 0 8px rgba(34,211,238,.45)}
 .b{min-height:48px;min-width:min(280px,78vw);padding:12px 22px;font:700 14px/1 inherit;letter-spacing:.22em;color:#dff;background:rgba(34,211,238,.08);border:1px solid var(--c);cursor:pointer;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);-webkit-user-select:none;user-select:none}
 .b:active,.b:focus-visible{background:var(--c);color:#001;outline:none}
 @media (hover:hover){.b:hover{background:rgba(34,211,238,.25)}}
@@ -44,7 +45,7 @@ h2{font-size:clamp(22px,5vw,44px);color:#dff}
 #hud{position:fixed;inset:0;z-index:5;pointer-events:none;display:none;font-size:12px;letter-spacing:.12em;text-shadow:0 0 6px #000}
 body[data-mode=play] #hud,body[data-mode=pause] #hud{display:block}
 #tl{position:absolute;left:calc(14px + var(--sl));top:calc(12px + var(--st));max-width:300px;line-height:1.5}
-#sec{color:var(--c);font-weight:700}#obj{color:#fff;font-weight:700}#score{opacity:.8}
+#sec{color:var(--c);font-weight:700}#obj{color:#fff;font-weight:700}#objd{font-size:11px;color:#bfefff;opacity:.9;line-height:1.35}#score{opacity:.8}
 #bars{position:absolute;left:calc(14px + var(--sl));bottom:calc(14px + var(--sb));width:230px;display:grid;gap:7px}
 #bars label{display:grid;gap:3px;font-size:10px;opacity:.9}
 .bar{display:block;height:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);overflow:hidden}
@@ -89,7 +90,7 @@ body[data-mode=play] #hud,body[data-mode=pause] #hud{display:block}
 @media (pointer:coarse){
   body[data-mode=play] #touch{display:block}
   #guide,#wpn{display:none}
-  #tl{max-width:29vw;font-size:10px;line-height:1.35}
+  #tl{max-width:29vw;font-size:10px;line-height:1.35}#objd{font-size:9px}
   #bars{left:50%;bottom:auto;top:calc(8px + var(--st));transform:translateX(-50%);width:min(34vw,260px);grid-template-columns:1fr 1fr;gap:3px 8px}
   #bars label{font-size:8px}.bar{height:6px}
   #boss{top:calc(52px + var(--st))}
@@ -107,7 +108,7 @@ body[data-mode=play] #hud,body[data-mode=pause] #hud{display:block}
 <div id="vig"></div><div id="dist"></div><div id="rwfx"></div><div id="flash"></div>
 
 <div id="hud" aria-live="polite">
-  <div id="tl"><div id="sec"></div><div id="obj"></div><div id="score"></div></div>
+  <div id="tl"><div id="sec"></div><div id="obj"></div><div id="objd"></div><div id="score"></div></div>
   <div id="bars">
     <label>INTEGRITY<span class="bar hp"><i id="b-hp"></i></span></label>
     <label>SHIELD<span class="bar sh"><i id="b-sh"></i></span></label>
@@ -130,7 +131,7 @@ body[data-mode=play] #hud,body[data-mode=pause] #hud{display:block}
   <button class="tb sm" id="t-jump" aria-label="Jump"><b>⇧</b><small>JUMP</small></button>
   <button class="tb sm" id="t-spr" aria-label="Sprint"><b>≫</b><small>SPRINT</small></button>
   <button class="tb sm" id="t-rw" aria-label="Rewind"><b>↺</b><small>REWIND</small></button>
-  <button class="tb sm" id="t-int" aria-label="Interact"><b>◈</b><small>USE</small></button>
+  <button class="tb sm" id="t-int" aria-label="Interact (same as E)"><b>◈</b><small>USE</small></button>
   <button class="tb sm" id="t-pause" aria-label="Pause"><b>❚❚</b></button>
 </div>
 <div id="fade"><div></div></div>
@@ -138,10 +139,11 @@ body[data-mode=play] #hud,body[data-mode=pause] #hud{display:block}
 <section class="panel" id="p-title">
   <h1 class="glitch" data-t="GLITCH//TIME">GLITCH//TIME</h1>
   <p class="sub">TIME IS YOUR WEAPON.</p>
+  <p class="small" id="best"></p>
+  <p class="dev">Developed by Henil Shah</p>
   <button class="b" data-a="start">START GAME</button>
   <button class="b" data-a="how">HOW TO PLAY</button>
   <button class="b" data-a="settings">SETTINGS</button>
-  <p class="small" id="best"></p>
 </section>
 
 <section class="panel hidden" id="p-how">
@@ -358,9 +360,10 @@ function gridTex(col) {
 function box(w, h, d, x, y, z, m) { const o = new T.Mesh(new T.BoxGeometry(w, h, d), m); o.position.set(x, y, z); world.add(o); return o; }
 function addCol(x, z, w, d) { colls.push({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, on: true }); }
 function drawDoor() {
-  const c = door.ctx, cols = ['#ff3b4e', '#22d3ee', '#ffb13c', '#3dff9a'], names = ['LOCKED', 'ACCESS GRANTED', 'OPENING', 'OPEN'];
-  c.clearRect(0, 0, 256, 64); c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(0, 0, 256, 64); c.fillStyle = cols[door.s]; c.font = 'bold 26px monospace'; c.textAlign = 'center'; c.fillText(names[door.s], 128, 42);
-  door.tex.needsUpdate = true; door.mat.emissive.set(cols[door.s]); door.mat.emissiveIntensity = .35;
+  const c = door.ctx, cols = ['#ff3b4e', '#3dff9a', '#ffb13c', '#22d3ee'], names = ['LOCKED', 'UNLOCKED', 'OPENING', 'OPEN'], sub = ['COMPLETE THE OBJECTIVE', 'PRESS E / INTERACT', '', ''];
+  c.clearRect(0, 0, 256, 64); c.fillStyle = 'rgba(0,0,0,.65)'; c.fillRect(0, 0, 256, 64); c.fillStyle = cols[door.s]; c.textAlign = 'center'; c.font = 'bold 26px monospace'; c.fillText(names[door.s], 128, sub[door.s] ? 32 : 42);
+  if (sub[door.s]) { c.font = '13px monospace'; c.fillText(sub[door.s], 128, 54); }
+  door.tex.needsUpdate = true; door.mat.emissive.set(cols[door.s]); door.mat.emissiveIntensity = .35; door.bk.material.color.set(cols[door.s]);
 }
 function buildWorld(n) {
   const C = SEC[n - 1], cc = C.c; clearWorld();
@@ -379,7 +382,8 @@ function buildWorld(n) {
     const cvs = document.createElement('canvas'); cvs.width = 256; cvs.height = 64; const tex = new T.CanvasTexture(cvs), dm = mat(0x222a35, 0xff3b4e, .8, .35);
     const slab = box(6, 6, .8, 0, 3, -26, dm); const lab = new T.Mesh(new T.PlaneGeometry(4, 1), new T.MeshBasicMaterial({ map: tex, transparent: true })); lab.position.set(0, 4.2, -25.55); world.add(lab);
     const col = { x0: -3, x1: 3, z0: -26.4, z1: -25.6, on: true }; colls.push(col);
-    door = { s: 0, t: 0, slab, mat: dm, tex, ctx: cvs.getContext('2d'), col }; drawDoor();
+    const bk = new T.Mesh(new T.CylinderGeometry(.07, .07, 9, 6), bas(0xff3b4e, .4)); bk.position.set(0, 4.5, -23.5); world.add(bk);
+    door = { s: 0, t: 0, slab, mat: dm, tex, ctx: cvs.getContext('2d'), col, bk }; drawDoor();
   }
   TP[n - 1].forEach(p => res.push([p[0], p[1], 4]));
   let sd = n * 97 + 13; const rr = () => (sd = sd * 16807 % 2147483647) / 2147483647;
@@ -578,8 +582,8 @@ function bossHit(d, crit) {
 /* ---------- objectives ---------- */
 function banner(txt, dur, bad) { const b = $('banner'); b.textContent = txt; b.className = 'show' + (bad ? ' bad' : ''); S.bn = dur; }
 function advance() {
-  const C = SEC[S.sector - 1]; S.stage++; S.score += 250; banner('OBJECTIVE COMPLETE', 2.2); sfx('obj');
-  if (S.stage === 1) { spawnWave(true); if (S.sector === 4) { S.alarm = true; } }
+  const C = SEC[S.sector - 1]; S.s1T = 0; S.stage++; S.score += 250; banner('OBJECTIVE COMPLETE', 2.2); sfx('obj');
+  if (S.stage === 1) { spawnWave(true); E.forEach(e => { if (e.on) e.act = true; }); if (S.sector === 4) { S.alarm = true; } }
   else if (S.stage === 2) { S.alarm = false; alL.intensity = 0; if (C.boss) spawnBoss(); else { door.s = 1; door.t = 0; drawDoor(); } }
 }
 function interact() {
@@ -588,6 +592,17 @@ function interact() {
     t.done = true; t.m.material.emissive.setHex(0x3dff9a); t.b.material.color.setHex(0x3dff9a); S.doneT++; S.score += 50; sfx('pick'); burst(t.x, 1.5, t.z, 0x3dff9a, 14, 4);
     if (S.doneT === terms.length && S.stage === 0) advance(); else banner('TERMINAL ACTIVE ' + S.doneT + '/' + terms.length, 1.4); return;
   }
+  if (door && M.hypot(P.x, P.z + 26) < 5.5) {
+    if (door.s === 1) { door.s = 2; door.t = 0; drawDoor(); sfx('door'); }
+    else if (door.s === 0) { banner('DOOR LOCKED', 2, 1); sfx('lwarn'); }
+  }
+}
+function objDetail() {
+  const C = SEC[S.sector - 1];
+  if (S.stage === 0) return 'ACTIVATE TERMINALS ' + S.doneT + '/' + terms.length + ' (RED BEACONS)' + (C.boss ? ' TO OPEN THE CORE GATE' : ' · DOOR LOCKED');
+  if (S.stage === 1) return 'DESTROY ALL HOSTILES: ' + alive() + ' LEFT';
+  if (C.boss) return 'SHOOT THE GLOWING CORE UNDER THE WARDEN';
+  return door && door.s === 3 ? 'ENTER THE OPEN DOOR' : door && door.s === 2 ? 'DOOR OPENING…' : 'DOOR UNLOCKED — GO TO IT, ' + (isTouch ? 'TAP INTERACT' : 'PRESS E');
 }
 
 /* ---------- rewind history ---------- */
@@ -680,6 +695,7 @@ function update(dt) {
   if (S.shT <= 0) S.sh = M.min(50, S.sh + 9 * dt);
   setCam(dt);
   if (flashT > 0) { flashT -= dt; flash.visible = flashT > 0; flash.rotation.z = rn(0, 6); }
+  if (S.stage === 1 && !S.rw) { S.s1T = (S.s1T || 0) + dt; if (S.s1T > 150 && alive() > 0) { banner('SECURITY OVERRIDE', 2.5); advance(); } }
   /* world */
   const C = SEC[S.sector - 1];
   for (const l of lasers) {
@@ -695,8 +711,7 @@ function update(dt) {
   spin.forEach(m => m.rotation.y += dt * .8); if (dust) dust.rotation.y += dt * .01;
   if (flick.length && (S.flk -= dt) <= 0) { S.flk = .25; flick.forEach(m => m.visible = M.random() > .25); }
   if (door) {
-    if (door.s === 1) { door.t += dt; if (door.t > .9) { door.s = 2; door.t = 0; drawDoor(); sfx('door'); } }
-    else if (door.s === 2) { door.t += dt; door.slab.position.y = 3 + cl(door.t / 1.4, 0, 1) * 6.2; if (door.t >= 1.4) { door.s = 3; door.col.on = false; drawDoor(); } }
+    if (door.s === 2) { door.t += dt; door.slab.position.y = 3 + cl(door.t / 1.4, 0, 1) * 6.2; if (door.t >= 1.4) { door.s = 3; door.col.on = false; drawDoor(); } }
     else if (door.s === 3 && P.z < -27 && M.abs(P.x) < 3.2 && !S.tr && S.sector < 5) nextSector();
   }
   if (S.alarm) { S.alT -= dt; alL.intensity = 1.2 + M.sin(S.t * 8) * 1.1; if (S.alT <= 0) { S.alT = 1.2; sfx('alarm'); } }
@@ -727,10 +742,11 @@ function hud(dt) {
   const C = SEC[S.sector - 1];
   setBar('b-hp', S.hp / 100); setBar('b-sh', S.sh / 50); setBar('b-we', S.we / 100); setBar('b-te', S.te / 100);
   setT('sec', 'SECTOR 0' + S.sector + ' · ' + C.n); setT('score', 'SCORE ' + S.score);
-  setT('obj', C.o[S.stage] + (S.stage === 0 && S.sector !== 3 ? ' ' + S.doneT + '/' + terms.length : S.stage === 0 ? ' ' + S.doneT + '/' + terms.length : S.stage === 1 ? ' · ' + alive() + ' LEFT' : ''));
+  setT('obj', C.o[S.stage]); setT('objd', objDetail());
   setT('wpn', 'PHASE RIFLE\nENERGY: ' + M.round(S.we) + '%'); $('wpn').className = S.ovh ? 'ovh' : '';
   if (B.on) setBar('bb', B.hp / B.mx);
-  let pr = ''; for (const t of terms) if (!t.done && M.hypot(P.x - t.x, P.z - t.z) < 3.4) pr = isTouch ? 'TAP USE — ACCESS TERMINAL' : '[E] ACCESS TERMINAL';
+  let pr = ''; for (const t of terms) if (!t.done && M.hypot(P.x - t.x, P.z - t.z) < 3.4) pr = isTouch ? 'TAP INTERACT — ACCESS TERMINAL' : '[E] ACCESS TERMINAL';
+  if (!pr && door && M.hypot(P.x, P.z + 26) < 5.5) pr = door.s === 1 ? (isTouch ? 'TAP INTERACT — OPEN DOOR' : '[E] OPEN DOOR') : door.s === 0 ? 'DOOR LOCKED' : '';
   if (tcache.pr !== pr) { tcache.pr = pr; const e = $('prompt'); e.textContent = pr; e.style.display = pr ? 'block' : 'none'; }
   const vg = S.sector === 4 ? .55 : 0; if (tcache.vg !== vg) { tcache.vg = vg; $('vig').style.opacity = vg; }
 }
@@ -746,7 +762,7 @@ function clearActors() {
   E.forEach(e => { e.on = false; e.dead = false; e.g.visible = false; }); PR.forEach(p => { p.on = false; p.m.visible = false; }); B.on = false; B.dead = false; B.g.visible = false; B.sh.on = false; B.sh.m.visible = false; $('boss').style.display = 'none';
 }
 function loadSector(n) {
-  S.sector = n; S.stage = 0; S.doneT = 0; S.alarm = false; S.p3 = false; S.dead = false; S.exh = false; S.ovh = false; S.we = 100; S.rw = false; S.inv = 1.5;
+  S.sector = n; S.stage = 0; S.s1T = 0; S.doneT = 0; S.alarm = false; S.p3 = false; S.dead = false; S.exh = false; S.ovh = false; S.we = 100; S.rw = false; S.inv = 1.5;
   clearActors(); buildWorld(n); $('dist').style.opacity = '0'; Object.assign(P, { x: 0, y: 0, z: 24, vx: 0, vz: 0, vy: 0, yaw: 0, pitch: 0 }); yawS = pitchS = 0; hn = 0; hacc = 0;
   spawnWave(false); music('amb'); banner('SECTOR 0' + n + ' — ' + SEC[n - 1].n, 3); if (n > save.sector) { save.sector = n; persist(); }
 }
